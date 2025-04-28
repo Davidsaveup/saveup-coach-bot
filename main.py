@@ -8,6 +8,8 @@ import asyncio
 import openai
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from flask import Flask
+import threading
 
 # Configura logging
 logging.basicConfig(
@@ -280,9 +282,24 @@ async def get_ai_suggestion(goal_info):
         logging.error(f"Errore AI suggestion: {e}")
         return "Continua così! Ogni passo ti avvicina al tuo traguardo."
 
+app_web = Flask('')
+
+@app_web.route('/')
+def home():
+    return "SaveUp Coach è online!"
+
+def run():
+    app_web.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = threading.Thread(target=run)
+    t.start()
+
 # Funzione principale
 def main():
-    
+
+    keep_alive()  # Questa riga fa partire il server Flask
+
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
