@@ -393,7 +393,7 @@ def main():
     app.add_handler(CommandHandler("mio_obiettivo", view_goal))
     app.add_handler(CommandHandler("cancella_obiettivo", delete_goal))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-     app.add_handler(CommandHandler("test_newsletter", test_newsletter))
+    app.add_handler(CommandHandler("test_newsletter", test_newsletter))
 
 
     app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=7, minute=0))
