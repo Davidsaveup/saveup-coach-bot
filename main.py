@@ -136,24 +136,27 @@ def filtra_articoli_con_blob(feed_url):
 
 
 # funzione di prova 
-async def test_newsletter(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def send_newsletter(context: ContextTypes.DEFAULT_TYPE):
     tutti_gli_articoli = []
 
     for url in RSS_FEEDS:
         try:
-            feed = feedparser.parse(url)
-            for entry in feed.entries:
-                titolo = entry.get('title', 'Titolo non disponibile')
-                link = entry.get('link', '')
-                descrizione = entry.get('summary', 'Nessuna descrizione disponibile')
-
-                messaggio = f"<b>{titolo}</b>\n{descrizione}\n<a href='{link}'>Leggi l'articolo completo</a>"
-                await update.message.reply_text(messaggio, parse_mode='HTML')
+            articoli = filtra_articoli_con_blob(url)
+            tutti_gli_articoli.extend(articoli)
         except Exception as e:
-            await update.message.reply_text(f"Errore con il feed {url}: {e}")
             logging.error(f"Errore nel feed {url}: {e}")
 
-    await update.message.reply_text("✅ Test newsletter completato.")
+    random.shuffle(tutti_gli_articoli)
+    articoli_finali = tutti_gli_articoli[:3]  # Limitiamo a 3
+
+    for user_id in user_last_seen:
+        for articolo in articoli_finali:  # Usa SOLO i 3 articoli selezionati
+            messaggio = f"<b>{articolo['titolo']}</b>\n{articolo['descrizione']}\n<a href='{articolo['link']}'>Leggi l'articolo completo</a>"
+            try:
+                await context.bot.send_message(chat_id=user_id, text=messaggio, parse_mode='HTML')
+            except Exception as e:
+                logging.error(f"Errore inviando news a {user_id}: {e}")
+
 
 
 
@@ -288,27 +291,27 @@ async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logging.error(f"Errore inviando consiglio a {user_id}: {e}")
 
-# Invio newsletter
 async def send_newsletter(context: ContextTypes.DEFAULT_TYPE):
     tutti_gli_articoli = []
 
     for url in RSS_FEEDS:
         try:
-            tutti_gli_articoli.extend(filtra_articoli_con_blob(url))
+            articoli = filtra_articoli_con_blob(url)
+            tutti_gli_articoli.extend(articoli)
         except Exception as e:
             logging.error(f"Errore nel feed {url}: {e}")
 
     random.shuffle(tutti_gli_articoli)
-    articoli_finali = tutti_gli_articoli[:3]
+    articoli_finali = tutti_gli_articoli[:3]  # Limitiamo a 3
 
     for user_id in user_last_seen:
+        for articolo in articoli_finali:  # Usa SOLO i 3 articoli selezionati
+            messaggio = f"<b>{articolo['titolo']}</b>\n{articolo['descrizione']}\n<a href='{articolo['link']}'>Leggi l'articolo completo</a>"
+            try:
+                await context.bot.send_message(chat_id=user_id, text=messaggio, parse_mode='HTML')
+            except Exception as e:
+                logging.error(f"Errore inviando news a {user_id}: {e}")
 
-            for articolo in articoli_finali:
-                messaggio = f"<b>{articolo['titolo']}</b>\n{articolo['descrizione']}\n<a href='{articolo['link']}'>Leggi l'articolo completo</a>"
-                try:
-                    await context.bot.send_message(chat_id=user_id, text=messaggio, parse_mode='HTML')
-                except Exception as e:
-                    logging.error(f"Errore inviando news a {user_id}: {e}")
 
 # Comandi gestione obiettivi
 async def set_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
