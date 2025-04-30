@@ -130,6 +130,12 @@ def filtra_articoli_con_blob(feed_url):
             })
     return articoli
 
+# funzione di prova 
+async def test_newsletter(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_newsletter(context)
+    await update.message.reply_text("Newsletter test inviata!")
+
+
 # Funzione di benvenuto
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -371,6 +377,8 @@ def main():
     app.add_handler(CommandHandler("mio_obiettivo", view_goal))
     app.add_handler(CommandHandler("cancella_obiettivo", delete_goal))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+app.add_handler(CommandHandler("test_newsletter", test_newsletter))
+
 
     app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=7, minute=0))
     app.job_queue.run_daily(send_newsletter, time=dt_time(hour=16, minute=0))
