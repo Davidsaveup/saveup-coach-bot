@@ -284,6 +284,9 @@ async def send_newsletter(context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logging.error(f"Errore inviando news a {user_id}: {e}")
 
+async def test_newsletter(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_newsletter(context)
+    await update.message.reply_text("Newsletter test inviata!")
 
 # Comandi gestione obiettivi
 async def set_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
