@@ -119,15 +119,18 @@ def parla_di_economia(titolo, descrizione):
     return any(parola in frase for frase in frasi_chiave for parola in parole_target)
 
 def filtra_articoli_con_blob(feed_url):
+    def filtra_articoli_con_blob(feed_url):
     feed = feedparser.parse(feed_url)
     articoli = []
     for entry in feed.entries:
+        descrizione = entry.get("summary", "Nessuna descrizione disponibile.")
         articoli.append({
             'titolo': entry.title,
             'link': entry.link,
-            'descrizione': entry.summary
+            'descrizione': descrizione
         })
     return articoli
+
 
 
 # funzione di prova 
