@@ -122,13 +122,13 @@ def filtra_articoli_con_blob(feed_url):
     feed = feedparser.parse(feed_url)
     articoli = []
     for entry in feed.entries:
-        if parla_di_economia(entry.title, entry.summary):
-            articoli.append({
-                'titolo': entry.title,
-                'link': entry.link,
-                'descrizione': entry.summary
-            })
+        articoli.append({
+            'titolo': entry.title,
+            'link': entry.link,
+            'descrizione': entry.summary
+        })
     return articoli
+
 
 # funzione di prova 
 async def test_newsletter(update: Update, context: ContextTypes.DEFAULT_TYPE):
