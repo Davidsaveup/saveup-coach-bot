@@ -10,6 +10,18 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from flask import Flask
 import threading
+from textblob import TextBlob
+import feedparser
+import nltk
+
+
+
+# Scarica solo se necessario
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
 
 # Configura logging
 logging.basicConfig(
@@ -42,6 +54,12 @@ MAX_MESSAGES_PER_DAY = 10
 CHARACTER_WARNING_THRESHOLD = 500
 MESSAGE_WARNING_THRESHOLD = 3
 THREAD_EXPIRATION_DAYS = 7
+
+RSS_FEEDS = [
+    'https://www.ansa.it/sito/ansait_rss.xml',
+    'https://www.ilsole24ore.com/rss/notizie.xml',
+    'https://www.wired.it/feed'
+]
 
 # Frasi
 OUT_OF_TOPIC_PHRASE = "Ciao, ricorda che mi occupo solo di domande legate alla finanza personale. Dimmi pure come posso aiutarti su questi argomenti"
@@ -91,6 +109,27 @@ DAILY_TIP_HEADERS = [
     "Spunto di oggi 📚:"
 ]
 
+def parla_di_economia(titolo, descrizione):
+    testo = f"{titolo} {descrizione}".lower()
+    blob = TextBlob(testo)
+    frasi_chiave = blob.noun_phrases
+
+    parole_target = ['economia', 'finanza', 'borsa', 'risparmio', 'investimenti', 'soldi', 'denaro', 'credito']
+
+    return any(parola in frase for frase in frasi_chiave for parola in parole_target)
+
+def filtra_articoli_con_blob(feed_url):
+    feed = feedparser.parse(feed_url)
+    articoli = []
+    for entry in feed.entries:
+        if parla_di_economia(entry.title, entry.summary):
+            articoli.append({
+                'titolo': entry.title,
+                'link': entry.link,
+                'descrizione': entry.summary
+            })
+    return articoli
+
 # Funzione di benvenuto
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -111,6 +150,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     user_message = update.message.text
+    user_last_seen[user_id] = datetime.now()
+
 
     global last_reset_date
 
@@ -211,14 +252,36 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Invio consigli giornalieri
 async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
-    for user_id, opted_in in user_opt_in_daily_tips.items():
-        if opted_in:
+  for user_id in user_last_seen:
+
             tip_header = random.choice(DAILY_TIP_HEADERS)
             tip_content = random.choice(DAILY_TIPS)
             try:
                 await context.bot.send_message(chat_id=user_id, text=f"{tip_header}\n{tip_content}")
             except Exception as e:
                 logging.error(f"Errore inviando consiglio a {user_id}: {e}")
+
+# Invio newsletter
+async def send_newsletter(context: ContextTypes.DEFAULT_TYPE):
+    tutti_gli_articoli = []
+
+    for url in RSS_FEEDS:
+        try:
+            tutti_gli_articoli.extend(filtra_articoli_con_blob(url))
+        except Exception as e:
+            logging.error(f"Errore nel feed {url}: {e}")
+
+    random.shuffle(tutti_gli_articoli)
+    articoli_finali = tutti_gli_articoli[:3]
+
+    for user_id in user_last_seen:
+
+            for articolo in articoli_finali:
+                messaggio = f"<b>{articolo['titolo']}</b>\n{articolo['descrizione']}\n<a href='{articolo['link']}'>Leggi l'articolo completo</a>"
+                try:
+                    await context.bot.send_message(chat_id=user_id, text=messaggio, parse_mode='HTML')
+                except Exception as e:
+                    logging.error(f"Errore inviando news a {user_id}: {e}")
 
 # Comandi gestione obiettivi
 async def set_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -309,7 +372,9 @@ def main():
     app.add_handler(CommandHandler("cancella_obiettivo", delete_goal))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=18, minute=0))
+    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=7, minute=0))
+    app.job_queue.run_daily(send_newsletter, time=dt_time(hour=16, minute=0))
+
 
     app.run_polling()
 
