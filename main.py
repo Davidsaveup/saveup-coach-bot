@@ -132,8 +132,24 @@ def filtra_articoli_con_blob(feed_url):
 
 # funzione di prova 
 async def test_newsletter(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_newsletter(context)
-    await update.message.reply_text("Newsletter test inviata!")
+    tutti_gli_articoli = []
+
+    for url in RSS_FEEDS:
+        try:
+            feed = feedparser.parse(url)
+            for entry in feed.entries:
+                titolo = entry.get('title', 'Titolo non disponibile')
+                link = entry.get('link', '')
+                descrizione = entry.get('summary', 'Nessuna descrizione disponibile')
+
+                messaggio = f"<b>{titolo}</b>\n{descrizione}\n<a href='{link}'>Leggi l'articolo completo</a>"
+                await update.message.reply_text(messaggio, parse_mode='HTML')
+        except Exception as e:
+            await update.message.reply_text(f"Errore con il feed {url}: {e}")
+            logging.error(f"Errore nel feed {url}: {e}")
+
+    await update.message.reply_text("✅ Test newsletter completato.")
+
 
 
 # Funzione di benvenuto
