@@ -273,6 +273,15 @@ async def delete_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Non hai nessun obiettivo salvato.")
 
+# Comando per testare l'invio del link
+async def test_send_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.reply_text("🧪 Invio link in corso...")
+        await context.bot.send_message(chat_id=update.message.chat_id, text="📰 Il link giornaliero è pronto! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
+    except Exception as e:
+        logging.error(f"Errore nel comando /prova_link: {e}")
+        await update.message.reply_text("Errore nell'invio del link 😕")
+
 async def get_ai_suggestion(goal_info):
     try:
         prompt = (
@@ -317,6 +326,8 @@ def main():
     app.add_handler(CommandHandler("mio_obiettivo", view_goal))
     app.add_handler(CommandHandler("cancella_obiettivo", delete_goal))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(CommandHandler("prova_link", test_send_link))
+
 
     app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=08, minute=0))
     app.job_queue.run_daily(send_daily_link, time=dt_time(hour=18, minute=0))
