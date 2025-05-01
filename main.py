@@ -104,7 +104,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id not in user_opt_in_daily_tips:
         await update.message.reply_text(
-            "Vuoi ricevere ogni giorno alle 18:00 un consiglio di educazione finanziaria? 📈\n\n"
+            "Vuoi ricevere ogni giorno alle 10:00 un consiglio di educazione finanziaria? 📈\n\n"
             "Rispondi semplicemente 'SI' oppure 'NO'."
         )
 
