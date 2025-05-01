@@ -220,6 +220,15 @@ async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logging.error(f"Errore inviando consiglio a {user_id}: {e}")
 
+# Invio link giornaliero
+async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
+    for user_id in user_last_seen:
+        try:
+            await context.bot.send_message(chat_id=user_id, text="📰 Il link giornaliero è pronto! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
+        except Exception as e:
+            logging.error(f"Errore inviando link a {user_id}: {e}")
+
+
 # Comandi gestione obiettivi
 async def set_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -309,7 +318,8 @@ def main():
     app.add_handler(CommandHandler("cancella_obiettivo", delete_goal))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=18, minute=0))
+    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=08, minute=0))
+    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=18, minute=0))
 
     app.run_polling()
 
