@@ -225,7 +225,7 @@ async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
 async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
     for user_id in user_last_seen:
         try:
-            await context.bot.send_message(chat_id=user_id, text="📰 Il link giornaliero è pronto! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
+            await context.bot.send_message(chat_id=user_id, text="📰 La newsletter giornaliera è pronta! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
         except Exception as e:
             logging.error(f"Errore inviando link a {user_id}: {e}")
 
