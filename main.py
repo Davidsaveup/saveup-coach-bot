@@ -329,7 +329,7 @@ def main():
     app.add_handler(CommandHandler("prova_link", test_send_link))
 
 
-    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=08, minute=0))
+    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=8, minute=0))
     app.job_queue.run_daily(send_daily_link, time=dt_time(hour=18, minute=0))
 
     app.run_polling()
