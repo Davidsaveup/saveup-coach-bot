@@ -165,7 +165,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user_id not in user_opt_in_daily_tips:
             if user_message.lower() == "si":
                 user_opt_in_daily_tips[user_id] = True
-                await update.message.reply_text("Perfetto! 🚀 Da oggi riceverai un consiglio ogni giorno alle 18:00.")
+                await update.message.reply_text("Perfetto! 🚀 Da oggi riceverai un consiglio ogni giorno alle 10:00.")
                 return
             elif user_message.lower() == "no":
                 user_opt_in_daily_tips[user_id] = False
