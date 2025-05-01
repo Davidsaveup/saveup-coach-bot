@@ -278,7 +278,7 @@ async def delete_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def test_send_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await update.message.reply_text("🧪 Invio link in corso...")
-        await update.message.reply_text("📰 Il link giornaliero è pronto! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
+        await update.message.reply_text("📰 la newsletter giornaliera è pronta! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
     except Exception as e:
         logging.error(f"Errore nel comando /prova_link: {e}")
         await update.message.reply_text("Errore nell'invio del link 😕")
