@@ -242,7 +242,7 @@ def save_user_id(user_id):
 # Invio link giornaliero
 async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
     # path al file immagine (può essere locale o un URL)
-    image_path = "path/to/tuo_banner.jpg"
+    image_path = os.path.join(os.path.dirname(__file__), "images", "Immagine rassegna stampa.png")
     # testo del caption
     caption = "📰 La newsletter giornaliera è pronta!"
     # inline button “Leggi ora”
@@ -316,17 +316,10 @@ async def delete_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Comando per testare l'invio del link
 async def test_send_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
-    # path al file immagine (può essere locale o un URL)
-    image_path = "path/to/tuo_banner.jpg"
-    # testo del caption
-    caption = "📰 La newsletter giornaliera è pronta!"
-    # inline button “Leggi ora”
-    keyboard = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Leggi ora", url="https://saveupnews.github.io/saveupnews/")]]
-    )
+    await update.message.reply_text("🧪 Invio link in corso…")
+    await send_daily_link(context)
 
-    # carica la lista di user_id
+# carica la lista di user_id
     try:
         with open("user_ids.json", "r") as f:
             user_ids = json.load(f)
