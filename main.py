@@ -12,6 +12,8 @@ from flask import Flask
 import threading
 import pytz
 import json
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 
 
 
@@ -239,20 +241,34 @@ def save_user_id(user_id):
 
 # Invio link giornaliero
 async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
+    # path al file immagine (può essere locale o un URL)
+    image_path = "path/to/tuo_banner.jpg"
+    # testo del caption
+    caption = "📰 La newsletter giornaliera è pronta!"
+    # inline button “Leggi ora”
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Leggi ora", url="https://saveupnews.github.io/saveupnews/")]]
+    )
+
+    # carica la lista di user_id
     try:
         with open("user_ids.json", "r") as f:
             user_ids = json.load(f)
-    except:
+    except FileNotFoundError:
         user_ids = []
 
     for user_id in user_ids:
         try:
-            await context.bot.send_message(
+            # invia foto + caption + inline button
+            await context.bot.send_photo(
                 chat_id=user_id,
-                text="📰 La newsletter giornaliera è pronta! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/"
+                photo=open(image_path, "rb"),
+                caption=caption,
+                reply_markup=keyboard
             )
         except Exception as e:
             logging.error(f"Errore inviando link a {user_id}: {e}")
+
 
 # Comandi gestione obiettivi
 async def set_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -300,12 +316,35 @@ async def delete_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Comando per testare l'invio del link
 async def test_send_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
+    # path al file immagine (può essere locale o un URL)
+    image_path = "path/to/tuo_banner.jpg"
+    # testo del caption
+    caption = "📰 La newsletter giornaliera è pronta!"
+    # inline button “Leggi ora”
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Leggi ora", url="https://saveupnews.github.io/saveupnews/")]]
+    )
+
+    # carica la lista di user_id
     try:
-        await update.message.reply_text("🧪 Invio link in corso...")
-        await update.message.reply_text("📰 la newsletter giornaliera è pronta! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
-    except Exception as e:
-        logging.error(f"Errore nel comando /prova_link: {e}")
-        await update.message.reply_text("Errore nell'invio del link 😕")
+        with open("user_ids.json", "r") as f:
+            user_ids = json.load(f)
+    except FileNotFoundError:
+        user_ids = []
+
+    for user_id in user_ids:
+        try:
+            # invia foto + caption + inline button
+            await context.bot.send_photo(
+                chat_id=user_id,
+                photo=open(image_path, "rb"),
+                caption=caption,
+                reply_markup=keyboard
+            )
+        except Exception as e:
+            logging.error(f"Errore inviando link a {user_id}: {e}")
+
 
 async def get_ai_suggestion(goal_info):
     try:
