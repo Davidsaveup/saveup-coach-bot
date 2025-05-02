@@ -223,12 +223,11 @@ async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
 
 # Invio link giornaliero
 async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
-    for user_id in user_last_seen:
+    for user_id in context.application.chat_data:
         try:
-            await context.bot.send_message(chat_id=user_id, text="📰 La newsletter giornaliera è pronta! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
+            await context.bot.send_message(chat_id=user_id, text="📰 La rassegna stampa giornaliera è pronta! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
         except Exception as e:
             logging.error(f"Errore inviando link a {user_id}: {e}")
-
 
 # Comandi gestione obiettivi
 async def set_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -331,7 +330,7 @@ def main():
 
 
     app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=8, minute=0))
-    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=18, minute=0))
+    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=10, minute=58))
 
     app.run_polling()
 
