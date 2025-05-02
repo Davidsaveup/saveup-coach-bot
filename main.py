@@ -319,26 +319,6 @@ async def test_send_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🧪 Invio link in corso…")
     await send_daily_link(context)
 
-# carica la lista di user_id
-    try:
-        with open("user_ids.json", "r") as f:
-            user_ids = json.load(f)
-    except FileNotFoundError:
-        user_ids = []
-
-    for user_id in user_ids:
-        try:
-            # invia foto + caption + inline button
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open(image_path, "rb"),
-                caption=caption,
-                reply_markup=keyboard
-            )
-        except Exception as e:
-            logging.error(f"Errore inviando link a {user_id}: {e}")
-
-
 async def get_ai_suggestion(goal_info):
     try:
         prompt = (
