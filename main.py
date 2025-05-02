@@ -356,7 +356,7 @@ def main():
     rome_tz = pytz.timezone("Europe/Rome")
 
     app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=10, minute=00, tzinfo=rome_tz))
-    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=14, minute=00, tzinfo=rome_tz))
+    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=18, minute=30, tzinfo=rome_tz))
 
 
     app.run_polling()
