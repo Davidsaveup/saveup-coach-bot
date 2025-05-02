@@ -10,6 +10,8 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from flask import Flask
 import threading
+import pytz
+
 
 # Configura logging
 logging.basicConfig(
@@ -328,9 +330,11 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(CommandHandler("prova_link", test_send_link))
 
+    rome_tz = pytz.timezone("Europe/Rome")
 
-    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=8, minute=0))
-    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=10, minute=58))
+    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=13, minute=10, tzinfo=rome_tz))
+    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=13, minute=10, tzinfo=rome_tz))
+
 
     app.run_polling()
 
