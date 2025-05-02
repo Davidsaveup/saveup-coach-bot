@@ -11,6 +11,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 from flask import Flask
 import threading
 import pytz
+import json
+
 
 
 # Configura logging
@@ -114,6 +116,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     user_message = update.message.text
+    save_user_id(user_id)
 
     global last_reset_date
 
@@ -225,9 +228,18 @@ async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
 
 # Invio link giornaliero
 async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
-    for user_id in context.application.chat_data:
+    try:
+        with open("user_ids.json", "r") as f:
+            user_ids = json.load(f)
+    except:
+        user_ids = []
+
+    for user_id in user_ids:
         try:
-            await context.bot.send_message(chat_id=user_id, text="📰 La rassegna stampa giornaliera è pronta! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/")
+            await context.bot.send_message(
+                chat_id=user_id,
+                text="📰 La newsletter giornaliera è pronta! Dai un’occhiata:\nhttps://saveupnews.github.io/saveupnews/"
+            )
         except Exception as e:
             logging.error(f"Errore inviando link a {user_id}: {e}")
 
@@ -333,7 +345,7 @@ def main():
     rome_tz = pytz.timezone("Europe/Rome")
 
     app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=13, minute=15, tzinfo=rome_tz))
-    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=13, minute=15, tzinfo=rome_tz))
+    app.job_queue.run_daily(send_daily_link, time=dt_time(hour=13, minute=25, tzinfo=rome_tz))
 
 
     app.run_polling()
