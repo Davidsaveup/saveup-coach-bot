@@ -244,8 +244,8 @@ async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
     # path al file immagine (può essere locale o un URL)
     image_path = os.path.join(os.path.dirname(__file__), "images", "Immagine rassegna stampa.png")
     # testo del caption
-    caption = "📰 La newsletter giornaliera è pronta!"
-    # inline button “Leggi ora”
+    caption = "📰 La Rassegna stampa è pronta!"
+    # inline button “Leggila ora”
     keyboard = InlineKeyboardMarkup(
         [[InlineKeyboardButton("Leggi ora", url="https://saveupnews.github.io/saveupnews/")]]
     )
