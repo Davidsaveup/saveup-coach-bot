@@ -16,6 +16,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 
+# se False, non schedula mai i consigli
+ENABLE_DAILY_TIPS = False
 
 # Configura logging
 logging.basicConfig(
@@ -108,11 +110,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(welcome_message)
 
-    if user_id not in user_opt_in_daily_tips:
-        await update.message.reply_text(
-            "Vuoi ricevere ogni giorno alle 10:00 un consiglio di educazione finanziaria? 📈\n\n"
-            "Rispondi semplicemente 'SI' oppure 'NO'."
-        )
+    # SOLO se ho daily tips abilitati, chiedo l’opt-in    
+    if ENABLE_DAILY_TIPS and user_id not in user_opt_in_daily_tips:
+            await update.message.reply_text(
+                "Vuoi ricevere ogni giorno alle 10:00 un consiglio di educazione finanziaria? 📈\n\n"
+                "Rispondi semplicemente 'SI' oppure 'NO'."
+            )
 
 # Gestione messaggi liberi
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -367,8 +370,9 @@ def main():
 
     rome_tz = pytz.timezone("Europe/Rome")
 
-    app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=10, minute=00, tzinfo=rome_tz))
     app.job_queue.run_daily(send_daily_link, time=dt_time(hour=18, minute=30, tzinfo=rome_tz))
+    if ENABLE_DAILY_TIPS:
+            app.job_queue.run_daily(send_daily_tips, time=dt_time(hour=10, minute=00, tzinfo=rome_tz))
 
 
     app.run_polling()
