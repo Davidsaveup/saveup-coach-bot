@@ -177,7 +177,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
         "Ciao! Sono SaveUp Coach, il tuo assistente personale per la finanza! 📈\n\n"
         "Ricorda che puoi usare SaveUp Coach anche su ChatGPT! Cerca 'SaveUp Coach' nella sezione Esplora GPT 🚀\n\n"
-        "Come posso aiutarti oggi?"
+        "Come posso aiutarti oggi?", reply_markup=GPT_BUTTON
     )
     await update.message.reply_text(welcome_message)
 
