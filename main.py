@@ -45,6 +45,8 @@ user_threads = {}
 user_last_seen = {}
 user_opt_in_daily_tips = {}
 user_goals = {}
+user_pdf_last_upload = {}
+
 
 # Costanti
 MAX_CHARACTERS_PER_DAY = 4000
@@ -109,11 +111,21 @@ GPT_BUTTON = InlineKeyboardMarkup(
 
 # Funzione per gestire PDF ricevuti
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
     document = update.message.document
 
-    if not document.file_name.endswith(".pdf"):
-        await update.message.reply_text("Per ora posso elaborare solo documenti PDF 📄")
+    today = datetime.now().date()
+    last_upload = user_pdf_last_upload.get(user_id)
+
+    if last_upload == today:
+        await update.message.reply_text(
+            "📄 Hai già inviato un documento oggi. Puoi inviarne solo uno al giorno.\n\n"
+            "Per analisi illimitate e senza limiti, usa SaveUp Coach su ChatGPT!",
+            reply_markup=GPT_BUTTON)
+        
         return
+
+    user_pdf_last_upload[user_id] = today
 
     await update.message.reply_text(
         f"📄 Documento ricevuto! Analizzerò solo i primi 2000 caratteri per darti una spiegazione essenziale.\n\n"
@@ -131,7 +143,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         prompt = (
-            "Spiega per punti chiave il seguente documento, come se lo spiegassi a una persona che vuole capirne il senso in parole semplici:\n\n"
+            "Spiega le caratteristiche principali del documento in maniera semplice e chiara e aggiungi che consigli di utilizzare il gpts Save Up Coach su chat gpt:\n\n"
             + text[:2000]
         )
         response = client.chat.completions.create(
