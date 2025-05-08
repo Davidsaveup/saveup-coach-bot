@@ -174,12 +174,16 @@ def extract_text_from_pdf(file_path):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
 
-    welcome_message = (
-        "Ciao! Sono SaveUp Coach, il tuo assistente personale per la finanza! 📈\n\n"
-        "Ricorda che puoi usare SaveUp Coach anche su ChatGPT! Cerca 'SaveUp Coach' nella sezione Esplora GPT 🚀\n\n"
-        "Come posso aiutarti oggi?", reply_markup=GPT_BUTTON
-    )
-    await update.message.reply_text(welcome_message)
+   welcome_message = (
+    "Ciao! Sono SaveUp Coach, il tuo assistente personale per la finanza! 📈\n\n"
+    "Con me puoi:\n"
+    "• Fare domande di finanza personale per muovere i primi passi nella gestione dei tuoi risparmi 🧠\n"
+    "• Ricevere ogni sera la rassegna stampa con le notizie economiche del giorno 🗞️\n"
+    "• Capire meglio i documenti informativi che ti sembrano troppo complessi 📄\n\n"
+    "📌 *Disclaimer:* non fornisco consigli di investimento. Le informazioni fornite, anche se estratte da documenti, vanno sempre verificate con fonti ufficiali o con un professionista.\n\n"
+    "Puoi anche usare SaveUp Coach su ChatGPT per un'esperienza completa!",
+)
+await update.message.reply_text(welcome_message, reply_markup=GPT_BUTTON)
 
     # SOLO se ho daily tips abilitati, chiedo l’opt-in    
     if ENABLE_DAILY_TIPS and user_id not in user_opt_in_daily_tips:
