@@ -13,6 +13,8 @@ import threading
 import pytz
 import json
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+import fitz  # PyMuPDF per leggere PDF
+
 
 
 
@@ -99,6 +101,63 @@ DAILY_TIP_HEADERS = [
     "Spunto di oggi 📚:"
 ]
 
+GPT_LINK = "https://chatgpt.com/g/g-680dee77df90819186bee2b1bb9dc48e-saveup-coach-gpt"
+GPT_BUTTON = InlineKeyboardMarkup(
+    [[InlineKeyboardButton("💬 Apri SaveUp Coach su ChatGPT", url=GPT_LINK)]]
+)
+
+
+# Funzione per gestire PDF ricevuti
+async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    document = update.message.document
+
+    if not document.file_name.endswith(".pdf"):
+        await update.message.reply_text("Per ora posso elaborare solo documenti PDF 📄")
+        return
+
+    await update.message.reply_text(
+        f"📄 Documento ricevuto! Analizzerò solo i primi 2000 caratteri per darti una spiegazione essenziale.\n\n"
+        "Per analisi completa e senza limiti, puoi usare SaveUp Coach su ChatGPT", reply_markup=GPT_BUTTON
+    )
+
+    file = await context.bot.get_file(document.file_id)
+    file_path = f"temp_{document.file_name}"
+    await file.download_to_drive(file_path)
+
+    try:
+        text = extract_text_from_pdf(file_path)
+        if len(text.strip()) < 50:
+            await update.message.reply_text("Il documento sembra vuoto o illeggibile.", reply_markup=GPT_BUTTON)
+            return
+
+        prompt = (
+            "Spiega per punti chiave il seguente documento, come se lo spiegassi a una persona che vuole capirne il senso in parole semplici:\n\n"
+            + text[:2000]
+        )
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500
+        )
+
+        summary = response.choices[0].message.content.strip()
+        await update.message.reply_text(f"Ecco un riassunto:\n\n{summary}", reply_markup=GPT_BUTTON)
+
+    except Exception as e:
+        logging.error(f"Errore elaborando PDF: {e}")
+        await update.message.reply_text("C'è stato un errore nell'elaborazione del PDF.", reply_markup=GPT_BUTTON)
+    finally:
+        os.remove(file_path)
+
+def extract_text_from_pdf(file_path):
+    doc = fitz.open(file_path)
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    doc.close()
+    return text
+
+
 # Funzione di benvenuto
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -128,7 +187,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Check se l'utente è bloccato
     if user_id in user_blocked_until and datetime.now() < user_blocked_until[user_id]:
-        await update.message.reply_text("Sei stato temporaneamente bloccato per superamento limiti. Riprovaci più tardi! 🚫")
+        await update.message.reply_text("Sei stato temporaneamente bloccato per superamento limiti. Riprovaci più tardi! 🚫", reply_markup=GPT_BUTTON)
         return
 
     # Reset giornaliero
@@ -155,20 +214,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if remaining_messages == MESSAGE_WARNING_THRESHOLD:
         await update.message.reply_text(
             f"Attenzione! Ti rimangono solo {remaining_messages} messaggi per oggi. 📩\n\n"
-            "Puoi continuare a usare SaveUp Coach anche su ChatGPT! Cerca 'SaveUp Coach' nella sezione Esplora GPT 🚀"
+            "Puoi continuare a usare SaveUp Coach anche su ChatGPT!", reply_markup=GPT_BUTTON
         )
 
     if remaining_characters <= CHARACTER_WARNING_THRESHOLD:
         await update.message.reply_text(
             f"Attenzione! Ti rimangono solo {remaining_characters} caratteri disponibili oggi. ✍️\n\n"
-            "Puoi continuare a usare SaveUp Coach anche su ChatGPT! Cerca 'SaveUp Coach' nella sezione Esplora GPT 🚀"
+            "Puoi continuare a usare SaveUp Coach anche su ChatGPT!", reply_markup=GPT_BUTTON
         )
 
     # Se ha superato i limiti
     if user_message_count[user_id] > MAX_MESSAGES_PER_DAY or user_character_count[user_id] > MAX_CHARACTERS_PER_DAY:
         user_blocked_until[user_id] = datetime.now() + timedelta(hours=24)
         await update.message.reply_text("Hai superato i limiti giornalieri. Sei bloccato per 24 ore. 🚫\n\n"
-                                        "Puoi continuare a usare SaveUp Coach anche su ChatGPT! Cerca 'SaveUp Coach' nella sezione Esplora GPT 🚀"
+                                        "Puoi continuare a usare SaveUp Coach anche su ChatGPT!", reply_markup=GPT_BUTTON
         )
         return
 
@@ -218,7 +277,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         logging.error(f"Errore durante risposta: {e}")
-        await update.message.reply_text("Mi dispiace, non riesco a rispondere al momento. Riprova più tardi!")
+        await update.message.reply_text("Mi dispiace, non riesco a rispondere al momento. Riprova più tardi!", reply_markup=GPT_BUTTON)
 
 # Invio consigli giornalieri
 async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
@@ -366,6 +425,7 @@ def main():
     app.add_handler(CommandHandler("mio_obiettivo", view_goal))
     app.add_handler(CommandHandler("cancella_obiettivo", delete_goal))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(MessageHandler(filters.Document.PDF, handle_document))
     app.add_handler(CommandHandler("prova_link", test_send_link))
 
     rome_tz = pytz.timezone("Europe/Rome")
