@@ -172,6 +172,7 @@ def extract_text_from_pdf(file_path):
 
 # Funzione di benvenuto
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await save_user_id(update, context)
     user_id = update.message.from_user.id
 
     welcome_message = (
@@ -184,6 +185,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Puoi anche usare SaveUp Coach su ChatGPT per un'esperienza completa!"
     )
     await update.message.reply_text(welcome_message, reply_markup=GPT_BUTTON)
+    
 
     # SOLO se ho daily tips abilitati, chiedo l’opt-in    
     if ENABLE_DAILY_TIPS and user_id not in user_opt_in_daily_tips:
@@ -416,6 +418,8 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(MessageHandler(filters.Document.PDF, handle_document))
     app.add_handler(CommandHandler("prova_link", test_send_link))
+    application.add_handler(CommandHandler("iscritti", iscritti))
+
 
     rome_tz = pytz.timezone("Europe/Rome")
 
