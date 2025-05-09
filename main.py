@@ -198,8 +198,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     user_message = update.message.text
-    await save_user_id(update, context)
-
+    save_user_id(user_id)
 
     global last_reset_date
 
@@ -308,6 +307,17 @@ async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(chat_id=user_id, text=f"{tip_header}\n{tip_content}")
             except Exception as e:
                 logging.error(f"Errore inviando consiglio a {user_id}: {e}")
+def save_user_id(user_id):
+    try:
+        with open("user_ids.json", "r") as f:
+            data = json.load(f)
+    except:
+        data = []
+
+    if user_id not in data:
+        data.append(user_id)
+        with open("user_ids.json", "w") as f:
+            json.dump(data, f)
 
 # Invio link giornaliero
 async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
@@ -362,6 +372,24 @@ async def test_send_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🧪 Invio link in corso…")
     await send_daily_link(context)
 
+async def get_ai_suggestion(goal_info):
+    try:
+        prompt = (
+            f"L'utente ha l'obiettivo: {goal_info['description']} con un target di {goal_info['target']}€. "
+            f"Ha risparmiato finora {goal_info['saved']}€. "
+            "Suggerisci in massimo 300 caratteri un consiglio pratico e motivazionale su come raggiungere più velocemente il suo obiettivo."
+        )
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100
+        )
+        suggestion = response.choices[0].message.content.strip()
+        return suggestion
+    except Exception as e:
+        logging.error(f"Errore AI suggestion: {e}")
+        return "Continua così! Ogni passo ti avvicina al tuo traguardo."
+
 app_web = Flask('')
 
 @app_web.route('/')
@@ -381,13 +409,16 @@ def main():
     keep_alive()
     
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("obiettivo", set_goal))
     app.add_handler(CommandHandler("aggiorna_risparmio", update_saved))
+    app.add_handler(CommandHandler("mio_obiettivo", view_goal))
+    app.add_handler(CommandHandler("cancella_obiettivo", delete_goal))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(MessageHandler(filters.Document.PDF, handle_document))
     app.add_handler(CommandHandler("prova_link", test_send_link))
-    app.add_handler(CommandHandler("iscritti", iscritti))
-
+    application.add_handler(CommandHandler("iscritti", iscritti))
 
 
     rome_tz = pytz.timezone("Europe/Rome")
