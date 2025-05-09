@@ -197,7 +197,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     user_message = update.message.text
-    save_user_id(user_id)
+    await save_user_id(update, context)
 
     global last_reset_date
 
@@ -306,17 +306,6 @@ async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(chat_id=user_id, text=f"{tip_header}\n{tip_content}")
             except Exception as e:
                 logging.error(f"Errore inviando consiglio a {user_id}: {e}")
-def save_user_id(user_id):
-    try:
-        with open("user_ids.json", "r") as f:
-            data = json.load(f)
-    except:
-        data = []
-
-    if user_id not in data:
-        data.append(user_id)
-        with open("user_ids.json", "w") as f:
-            json.dump(data, f)
 
 # Invio link giornaliero
 async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
