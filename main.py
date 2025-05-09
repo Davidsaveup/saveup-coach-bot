@@ -198,7 +198,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     user_message = update.message.text
-    save_user_id(user_id)
+    await save_user_id(update, context)
+
 
     global last_reset_date
 
