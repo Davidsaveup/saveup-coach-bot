@@ -307,17 +307,6 @@ async def send_daily_tips(context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(chat_id=user_id, text=f"{tip_header}\n{tip_content}")
             except Exception as e:
                 logging.error(f"Errore inviando consiglio a {user_id}: {e}")
-def save_user_id(user_id):
-    try:
-        with open("user_ids.json", "r") as f:
-            data = json.load(f)
-    except:
-        data = []
-
-    if user_id not in data:
-        data.append(user_id)
-        with open("user_ids.json", "w") as f:
-            json.dump(data, f)
 
 # Invio link giornaliero
 async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
@@ -418,7 +407,8 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(MessageHandler(filters.Document.PDF, handle_document))
     app.add_handler(CommandHandler("prova_link", test_send_link))
-    application.add_handler(CommandHandler("iscritti", iscritti))
+    app.add_handler(CommandHandler("iscritti", iscritti))
+
 
 
     rome_tz = pytz.timezone("Europe/Rome")
