@@ -5,4 +5,5 @@ textblob
 nltk
 feedparser
 PyMuPDF
+gunicorn
 
