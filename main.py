@@ -373,6 +373,14 @@ def keep_alive():
     t = threading.Thread(target=run)
     t.start()
 
+# --- Comando /iscritti ---
+async def iscritti(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        with open("user_ids.json", "r") as f:
+            user_ids = json.load(f)
+        await update.message.reply_text(f"📊 Utenti iscritti: {len(user_ids)}")
+    except FileNotFoundError:
+        await update.message.reply_text("Nessun utente iscritto trovato.")
 
 # Funzione principale
 def main():
@@ -384,7 +392,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(MessageHandler(filters.Document.PDF, handle_document))
     app.add_handler(CommandHandler("prova_link", test_send_link))
-    application.add_handler(CommandHandler("iscritti", iscritti))
+    app.add_handler(CommandHandler("iscritti", iscritti))
 
 
     rome_tz = pytz.timezone("Europe/Rome")
