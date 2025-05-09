@@ -348,49 +348,22 @@ async def send_daily_link(context: ContextTypes.DEFAULT_TYPE):
             logging.error(f"Errore inviando link a {user_id}: {e}")
 
 
-# Comandi gestione obiettivi
-async def set_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# Salvataggio utenti
+
+async def save_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
     try:
-        text = " ".join(context.args)
-        parts = text.rsplit(" ", 1)
-        description = parts[0]
-        target = float(parts[1])
-        user_goals[update.message.from_user.id] = {"description": description, "target": target, "saved": 0}
-        await update.message.reply_text(f"Obiettivo salvato! 🎯 {description} - Target: {target}€")
-    except:
-        await update.message.reply_text("Formato non corretto. Usa: /obiettivo descrizione importo")
+        with open("user_ids.json", "r") as f:
+            user_ids = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        user_ids = []
 
-async def update_saved(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        amount = float(context.args[0])
-        user_id = update.message.from_user.id
-        if user_id in user_goals:
-            user_goals[user_id]["saved"] = amount
-            await update.message.reply_text(f"Risparmio aggiornato: {amount}€ su {user_goals[user_id]['target']}€ 🎯")
-            goal_info = user_goals[user_id]
-            suggestion = await get_ai_suggestion(goal_info)
-            await update.message.reply_text(f"Consiglio per te: {suggestion}")
-        else:
-            await update.message.reply_text("Non hai ancora impostato un obiettivo. Usa /obiettivo.")
-    except:
-        await update.message.reply_text("Formato non corretto. Usa: /aggiorna_risparmio importo")
+    if user_id not in user_ids:
+        user_ids.append(user_id)
+        with open("user_ids.json", "w") as f:
+            json.dump(user_ids, f)
+        logging.info(f"Nuovo user_id registrato: {user_id}")
 
-async def view_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    if user_id in user_goals:
-        goal = user_goals[user_id]
-        percent = (goal["saved"] / goal["target"]) * 100 if goal["target"] > 0 else 0
-        await update.message.reply_text(f"🎯 Obiettivo: {goal['description']}\nRisparmiato: {goal['saved']}€ su {goal['target']}€ ({percent:.1f}%)")
-    else:
-        await update.message.reply_text("Non hai ancora impostato un obiettivo.")
-
-async def delete_goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    if user_id in user_goals:
-        del user_goals[user_id]
-        await update.message.reply_text("Obiettivo cancellato. ✨")
-    else:
-        await update.message.reply_text("Non hai nessun obiettivo salvato.")
 
 # Comando per testare l'invio del link
 async def test_send_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
